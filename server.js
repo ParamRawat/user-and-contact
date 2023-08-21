@@ -5,9 +5,11 @@ const app = express();
 const db = require("./app/models");
 const userRoutes = require("./app/routes/user.routes");
 const contactRoutes = require("./app/routes/contact.routes");
+// parse requests of content-type - application/json
+app.use(express.json());
 
-app.use('/user', userRoutes);
-app.use('/contact', contactRoutes);
+// parse requests of content-type - application/x-www-form-urlencoded
+app.use(express.urlencoded({ extended: true }));
 
 var corsOptions = {
   origin: "http://localhost:8080"
@@ -23,11 +25,9 @@ db.sequelize.sync()
 
 app.use(cors(corsOptions));
 
-// parse requests of content-type - application/json
-app.use(express.json());
+app.use('/user', userRoutes);
+app.use('/contact', contactRoutes);
 
-// parse requests of content-type - application/x-www-form-urlencoded
-app.use(express.urlencoded({ extended: true }));
 
 // simple route
 app.get("/", (req, res) => {

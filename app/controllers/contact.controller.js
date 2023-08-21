@@ -1,10 +1,12 @@
 const db = require("../models");
 const Contact = db.contact;
 const Op = db.Sequelize.Op;
+const User = require('../models/user.model');
 
 // Create contact
 const ContactController = {
-add_contact : async (req, res) => {
+    
+    addContact : async (req, res) => {
     try {
         const { fullname, address, contactno, zip, email, created_by } = req.body;
         const contact = await Contact.create({
@@ -22,35 +24,44 @@ add_contact : async (req, res) => {
         console.error(error);
         res.status(500).json({ message: 'Internal server error' });
     }
-}
-};
+},
 
 // Contact details with user details
-app.get('/contact_details/:contactId', async (req, res) => {
+contactDetails: async (req, res) => {
     try {
-        const contactId = req.params.contactId;
-        const contact = await Contact.findByPk(contactId, { include: User });
-        if (!contact) {
-            return res.status(404).json({ message: 'Contact not found' });
+      const contactId = req.params.contactId;
+      const contact = await Contact.findByPk(contactId, {
+        include: {
+          model: User,
+          attributes: ['username', 'email'] // Include only the necessary fields
         }
-        res.json({
-            contact: {
-                fullname: contact.fullname,
-                address: contact.address,
-                contactno: contact.contactno,
-                zip: contact.zip,
-                email: contact.email,
-            },
-            created_by: contact.user,
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Internal server error' });
-    }
-});
+      });
 
-// User details with all contacts
-app.get('/user_details/:userId', async (req, res) => {
+      if (!contact) {
+        return res.status(404).json({ message: 'Contact not found' });
+      }
+
+      res.json({
+        contact: {
+          fullname: contact.fullname,
+          address: contact.address,
+          contactno: contact.contactno,
+          zip: contact.zip,
+          email: contact.email,
+        },
+        created_by: {
+          username: contact.user.username,
+          email: contact.user.email,
+          // Include other user-related fields if needed
+        },
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  },
+
+userDetails: async (req, res) => {
     try {
         const userId = req.params.userId;
         const user = await User.findByPk(userId, { include: Contact });
@@ -69,7 +80,10 @@ app.get('/user_details/:userId', async (req, res) => {
         console.error(error);
         res.status(500).json({ message: 'Internal server error' });
     }
-});
+},
+
+};
+
 
 module.exports = ContactController;
 
